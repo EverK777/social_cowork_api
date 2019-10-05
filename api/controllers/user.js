@@ -3,6 +3,7 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
 const constant = require('../utils/constants');
+const jwt = require ('../services/jwt');
 
 
 function home(req, res) {
@@ -76,26 +77,43 @@ function login(req, res) {
             bcrypt.compare(password, user.password, (err, check) => {
                 if (check) {
                     //login successfully
-                    return res.status(200).send({user});
-                }else {
+                    if (params.gettoken) {
+                        return res.status(200).send({
+                            token: jwt.createToken(user)
+                        });
+                    } else {
+                        user.password = undefined;
+                        return res.status(200).send({user});
+                    }
+                } else {
                     //wrong email or password
                     return res.status(404).send({message: 'Error login, check password and email'});
                 }
             })
-        }else {
+        } else {
             //user doesnt have an account
             return res.status(404).send({message: 'This user does not have an account'});
 
         }
     })
-
-
 }
 
+function getUser(req,res){
+    const userId = req.params.id;
+
+    User.findById(userId, (err, user) =>{
+       if(err) return res.status(500).send({message : 'Request error'});
+
+       if(!user) return res.status(404).send({message: 'The user does not exist'});
+        user.password = undefined;
+       return res.status(200).send({user})
+    });
+}
 
 module.exports = {
     home,
     pruebas,
     saveUser,
-    login
+    login,
+    getUser
 }
