@@ -7,12 +7,14 @@ const app = express();
 
 
 //	load routes
-const userRoutes = require('./routes/user');
+const userRoutes = require('./routes/userRoutes');
+const followRoutes = require('./routes/followRoutes');
 
 
-//	modllewares
+//	middleware
 app.use(bodyParser.urlencoded({extended:false}));
 app.use(bodyParser.json());
+
 
 
 //	cors
@@ -20,6 +22,7 @@ app.use(bodyParser.json());
 //	routes
 
 app.use('/api', userRoutes);
+app.use('/api', followRoutes);
 
 // export
 module.exports = app;
