@@ -21,6 +21,8 @@ api.post(constant.login, userController.login);
 api.get(constant.getUser,middlewareAuth.ensureAuth , userController.getUser);
 //get users
 api.get(constant.getUsers,middlewareAuth.ensureAuth , userController.getUsers);
+//get user count
+api.get(constant.getCount,middlewareAuth.ensureAuth , userController.getCounters);
 //update user
 api.put(constant.updateUser,middlewareAuth.ensureAuth, userController.updateUser);
 //upload avatar

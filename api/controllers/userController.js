@@ -1,12 +1,14 @@
 'use strict';
 
+
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
 const constant = require('../utils/constants');
-const jwt = require ('../services/jwt');
+const jwt = require('../services/jwt');
 const mongoosePaginated = require('mongoose-pagination');
 const fileSystem = require('fs');
 const path = require('path');
+const Follow = require('../models/follow');
 
 
 function home(req, res) {
@@ -102,124 +104,213 @@ function login(req, res) {
     })
 }
 
-function getUser(req,res){
+function getUser(req, res) {
     const userId = req.params.id;
 
-    User.findById(userId, (err, user) =>{
-       if(err) return res.status(500).send({message : 'Request error'});
+    User.findById(userId, (err, user) => {
+        if (err) return res.status(500).send({message: 'Request error'});
 
-       if(!user) return res.status(404).send({message: 'The user does not exist'});
+        if (!user) return res.status(404).send({message: 'The user does not exist'});
         user.password = undefined;
-       return res.status(200).send({user})
+
+        followThisUser(req.user.sub, userId).then(value => {
+            return res.status(200).send({
+                user,
+                following: value.following,
+                followed: value.followed
+            })
+        });
+
+        /* Follow.findOne({"user": req.user.sub, "followed": userId}).exec((err, follow) => {
+             if (err) return res.status(500).send({message: 'Error to check the following'});
+             return res.status(200).send({user, follow})
+         });*/
     });
 }
 
-function getUsers(req, res){
+async function followThisUser(identity_user_id, user_id) {
+    let following = await Follow.findOne({"user": identity_user_id, "followed": user_id}).then((follow) => {
+        return follow;
+    });
+
+    let followed = await Follow.findOne({"user": user_id, "followed": identity_user_id}).then((follow) => {
+        return follow;
+    });
+
+    console.log(following);
+    return {
+        following: following,
+        followed: followed
+    }
+}
+
+function getUsers(req, res) {
     const identityUserId = req.user.sub;
     var page = 1;
-    if(req.params.page){
+    if (req.params.page) {
         page = req.params.page;
     }
     const itemsPerPage = 5;
 
-    User.find().sort('_id').paginate(page, itemsPerPage, (err, users, total)=>{
-        if(err) return res.status(500).send({message : 'Request error'});
+    User.find().sort('_id').paginate(page, itemsPerPage, (err, users, total) => {
+        if (err) return res.status(500).send({message: 'Request error'});
 
-        if(!users) return res.status(404).send({message: 'There are not users available'});
+        if (!users) return res.status(404).send({message: 'There are not users available'});
 
-        users.forEach(function(item) { item.password = undefined});
-        return res.status(200).send({
-            users,
-            total,
-            pages: Math.ceil(total/itemsPerPage),
+        followUsersIds(identityUserId).then(value => {
 
+            users.forEach(function (item) {
+                item.password = undefined
+            });
+            return res.status(200).send({
+                users,
+                usersFollowing: value.following,
+                usersFollowMe: value.followed,
+                total,
+                pages: Math.ceil(total / itemsPerPage),
+            });
         });
     });
 }
 
-function updateUser(req, res){
+async function followUsersIds(user_id) {
+    const following = await Follow.find({"user": user_id}).select({'_id': 0, '__v': 0, 'user': 0}).then(follows => {
+
+        return follows;
+    });
+
+    const followingClean = [];
+
+    following.forEach((follow) => {
+        followingClean.push(follow.followed)
+    });
+
+    const followed = await Follow.find({"followed": user_id}).select({
+        '_id': 0,
+        '__v': 0,
+        'followed': 0
+    }).then(follows => {
+        return follows;
+    });
+
+    const followedClean = [];
+
+    followed.forEach((follow) => {
+        followedClean.push(follow.user)
+    });
+    return {
+        following: followingClean,
+        followed: followedClean
+    }
+}
+
+function updateUser(req, res) {
     const userId = req.params.id;
     const update = req.body;
 
     //delete property password
     delete update.password;
 
-    if(userId !== req.user.sub){
+    if (userId !== req.user.sub) {
         return res.status(500).send({message: 'you do not have access to update this user'});
     }
 
-    User.findByIdAndUpdate(userId, update, {new:true}, (err, userUpdated) => {
-       if(err) return res.status(500).send({message: 'Request error'});
-       
-       if(!userUpdated) return res.status(404).send({message: 'The user cannot be updated'});
-       
-       return res.status(200).send({user: userUpdated});
+    User.findByIdAndUpdate(userId, update, {new: true}, (err, userUpdated) => {
+        if (err) return res.status(500).send({message: 'Request error'});
+
+        if (!userUpdated) return res.status(404).send({message: 'The user cannot be updated'});
+
+        return res.status(200).send({user: userUpdated});
 
     });
 }
 
-function uploadImage(req, res){
+function uploadImage(req, res) {
     const userId = req.params.id;
 
-    if(req.files){
+    if (req.files) {
         const filePath = req.files.image.path;
         const fileSplit = filePath.split('\\');
-        const fileName = fileSplit[fileSplit.length-1];
+        const fileName = fileSplit[fileSplit.length - 1];
         const extension = fileName.split('\.');
         const fileExtension = extension[1].toLowerCase();
 
-        if(userId !== req.user.sub){
-            return deletePath(filePath,res,'you do not have access to update this user')
+        if (userId !== req.user.sub) {
+            return deletePath(filePath, res, 'you do not have access to update this user')
         }
 
-        if(fileExtension === 'png' ||
+        if (fileExtension === 'png' ||
             fileExtension === 'jpg' ||
             fileExtension === 'jpeg' ||
-            fileExtension === 'gif'){
-            User.findByIdAndUpdate(userId, {image: fileName}, {new:true}, (err, userUpdated)=>{
-                if(err) return res.status(500).send({message: 'Request error'});
+            fileExtension === 'gif') {
+            User.findByIdAndUpdate(userId, {image: fileName}, {new: true}, (err, userUpdated) => {
+                if (err) return res.status(500).send({message: 'Request error'});
 
-                if(!userUpdated) return res.status(404).send({message: 'The user cannot be updated'});
+                if (!userUpdated) return res.status(404).send({message: 'The user cannot be updated'});
 
                 userUpdated.password = undefined;
 
                 return res.status(200).send({user: userUpdated});
             });
 
-        }else {
-           return deletePath(filePath,res,'Wrong image format');
+        } else {
+            return deletePath(filePath, res, 'Wrong image format');
         }
-    }else {
-       return  res.status(200).send({message: 'image could not be send'});
+    } else {
+        return res.status(200).send({message: 'image could not be send'});
     }
 }
 
-function deletePath(filePath, res,message){
-    fileSystem.unlink(filePath, (err)=>{
-        return res.status(200).send({message:message});
+function deletePath(filePath, res, message) {
+    fileSystem.unlink(filePath, (err) => {
+        return res.status(200).send({message: message});
     });
 }
 
-function getImageFile(req, res){
+function getImageFile(req, res) {
     const image_file = req.params.imageFile;
-    const path_file = './uploads/users/'+image_file;
+    const path_file = './uploads/users/' + image_file;
 
-    fileSystem.stat(path_file,(err,stats)=>{
-        if(err) return res.status(200).send({message:'Image does not exist'});
-         return res.sendFile(path.resolve(path_file));
+    fileSystem.stat(path_file, (err, stats) => {
+        if (err) return res.status(200).send({message: 'Image does not exist'});
+        return res.sendFile(path.resolve(path_file));
+    });
+}
+
+function getCounters(req, res) {
+    var userId = req.user.sub;
+    if (req.params.id) {
+        userId = req.params.id;
+    }
+
+    getCountFollows(userId).then(value => {
+        return res.status(200).send(value)
+    });
+}
+
+async function getCountFollows(userId) {
+    const following = await Follow.countDocuments({"user": userId}).then((count) => {
+        return count;
     });
 
+    const followed = await Follow.countDocuments({"followed": userId}).then((count) => {
+        return count;
+    });
+    return {
+        following: following,
+        followed: followed
+    }
 
 }
 
 
 module.exports = {
     home,
-    pruebas,
     saveUser,
     login,
     getUser,
     getUsers,
+    getCounters,
     updateUser,
     uploadImage,
     getImageFile

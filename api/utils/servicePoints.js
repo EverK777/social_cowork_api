@@ -2,11 +2,12 @@
 
 //users points
 const home = '/01';
-const registerUser = '/03';
-const login = '/04';
-const getUser = '/05/:id';
-const getUsers = '/06/:page?';
-const updateUser = '/07/:id';
+const registerUser = '/02';
+const login = '/03';
+const getUser = '/04/:id';
+const getUsers = '/05/:page?';
+const updateUser = '/06/:id';
+const getCount = '/07/:id?';
 const uploadImage = '/08/:id';
 const getAvatar = '/09/:imageFile';
 
@@ -15,6 +16,7 @@ const follow = '/10';
 const unFollow = '/11/:id';
 const listFollows = '/12/:id?/:page?';
 const listFollowed = '/13/:id?/:page?';
+const getFollows = '/14/:followed?';
 
 
 module.exports = {
@@ -29,6 +31,7 @@ module.exports = {
     follow,
     unFollow,
     listFollows,
-    listFollowed
-
+    listFollowed,
+    getFollows,
+    getCount
 };
