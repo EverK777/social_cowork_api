@@ -1,9 +1,9 @@
-'use strict'
+'use strict';
 
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-var PublicationSchema = Schema({
+const PublicationSchema = Schema({
 	text: String,
 	file: String,
 	created_at: String,

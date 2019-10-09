@@ -1,6 +1,6 @@
 'use strict';
 
-const constant = require('../utils/servicePoints');
+const constant = require('../services/servicePoints');
 
 const express = require('express');
 const userController = require('../controllers/userController');

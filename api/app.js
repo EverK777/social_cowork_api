@@ -9,6 +9,7 @@ const app = express();
 //	load routes
 const userRoutes = require('./routes/userRoutes');
 const followRoutes = require('./routes/followRoutes');
+const publicationRoutes = require('./routes/publicationRoutes');
 
 
 //	middleware
@@ -23,6 +24,7 @@ app.use(bodyParser.json());
 
 app.use('/api', userRoutes);
 app.use('/api', followRoutes);
+app.use('/api', publicationRoutes);
 
 // export
 module.exports = app;

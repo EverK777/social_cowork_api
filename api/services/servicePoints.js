@@ -18,6 +18,11 @@ const listFollows = '/12/:id?/:page?';
 const listFollowed = '/13/:id?/:page?';
 const getFollows = '/14/:followed?';
 
+// publications points
+const createPublication = '/15';
+const getPublications = '/16/:page?';
+const getPublication = '/17/:id';
+
 
 module.exports = {
     home,
@@ -33,5 +38,8 @@ module.exports = {
     listFollows,
     listFollowed,
     getFollows,
-    getCount
+    getCount,
+    createPublication,
+    getPublications,
+    getPublication
 };

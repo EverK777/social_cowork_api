@@ -3,7 +3,7 @@
 const express = require('express');
 const followController = require('../controllers/followController');
 const api = express.Router();
-const constant = require('../utils/servicePoints');
+const constant = require('../services/servicePoints');
 
 const middlewareAuth = require('../middlewares/authenticate');
 
