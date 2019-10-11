@@ -22,7 +22,14 @@ const getFollows = '/14/:followed?';
 const createPublication = '/15';
 const getPublications = '/16/:page?';
 const getPublication = '/17/:id';
+const deletePublication = '/18/:id';
+const uploadImagePublication = '/19/:id';
+const getImagePublication = '/20/:imageFile';
 
+//messages points
+const sendMessage = '/21';
+const getReceiverMessages = '/22/:page?';
+const getEmitterMessages = '/23/:page?';
 
 module.exports = {
     home,
@@ -41,5 +48,12 @@ module.exports = {
     getCount,
     createPublication,
     getPublications,
-    getPublication
+    getPublication,
+    deletePublication,
+    uploadImagePublication,
+    getImagePublication,
+    sendMessage,
+    getReceiverMessages,
+    getEmitterMessages
+
 };

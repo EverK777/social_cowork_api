@@ -9,6 +9,7 @@ const mongoosePaginated = require('mongoose-pagination');
 const fileSystem = require('fs');
 const path = require('path');
 const Follow = require('../models/follow');
+const Publication = require('../models/publication');
 
 
 function home(req, res) {
@@ -17,12 +18,6 @@ function home(req, res) {
     });
 }
 
-function pruebas(req, res) {
-    console.log(req.body);
-    res.status(200).send({
-        message: 'Prueba'
-    });
-}
 
 function saveUser(req, res) {
     const params = req.body;
@@ -296,9 +291,15 @@ async function getCountFollows(userId) {
     const followed = await Follow.countDocuments({"followed": userId}).then((count) => {
         return count;
     });
+
+    const publications = await Publication.countDocuments({"user":userId}).then((count)=>{
+        return count
+    });
+
     return {
         following: following,
-        followed: followed
+        followed: followed,
+        publications : publications
     }
 
 }
