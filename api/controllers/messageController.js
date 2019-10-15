@@ -19,6 +19,7 @@ function sendMessage(req, res) {
     message.receiver = params.receiver;
     message.text = params.text;
     message.created_at = moment().unix();
+    message.viewed = 'false';
 
     message.save((err, messageStored) => {
         if (err) return res.status(500).send({message: 'Request error'});
@@ -81,11 +82,39 @@ function getEmitterMessages(req, res) {
     });
 }
 
+function getUnViewedMessages(req,res){
+    const userId = req.user.sub;
+
+    Message.countDocuments({receiver:userId, viewed:'false'}).exec((err, count)=>{
+        if (err) return res.status(500).send({message: 'Request error'});
+
+        return res.status(200).send({
+            'unViewed': count
+        })
+    })
+}
+
+function setViewedMessages(req, res){
+    const userId = req.user.sub;
+
+    Message.update({receiver:userId,viewed:'false'}, {viewed:'true'}, {multi: true}, (err, messagesUpdated)=>{
+        if (err) return res.status(500).send({message: 'Request error'});
+
+        return res.status(200).send({
+            messages: messagesUpdated
+        });
+
+    });
+
+}
+
 
 
 
 module.exports = {
     sendMessage,
     getReceivedMessages,
-    getEmitterMessages
+    getEmitterMessages,
+    getUnViewedMessages,
+    setViewedMessages
 };

@@ -30,6 +30,8 @@ const getImagePublication = '/20/:imageFile';
 const sendMessage = '/21';
 const getReceiverMessages = '/22/:page?';
 const getEmitterMessages = '/23/:page?';
+const getUnViewedMessages = '/24';
+const setAllViewMessages = '/25';
 
 module.exports = {
     home,
@@ -54,6 +56,7 @@ module.exports = {
     getImagePublication,
     sendMessage,
     getReceiverMessages,
-    getEmitterMessages
-
+    getEmitterMessages,
+    getUnViewedMessages,
+    setAllViewMessages
 };
